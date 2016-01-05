@@ -1,0 +1,21 @@
+{% extends "layout.html" %}
+{% block body %}
+  {% if session.logged_in %}
+    <form action="{{ url_for('add_patient') }}" method=post class=add-entry>
+      <dl>
+        <dt>Patient ID:
+        <dd><input type=text size=30 name=patient_id>
+        <dt>Sex:
+        <dd><textarea name=sex rows=5 cols=40></textarea>
+        <dd><input type=submit value=Share>
+      </dl>
+    </form>
+  {% endif %}
+  <ul class=entries>
+  {% for patient in patients %}
+    <li><h2>{{ patient.patient_id }}</h2>{{ patient.sex|safe }}
+  {% else %}
+    <li><em>Unbelievable.  No patients here so far</em>
+  {% endfor %}
+  </ul>
+{% endblock %}
