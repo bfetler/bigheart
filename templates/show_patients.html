@@ -1,7 +1,7 @@
 {% extends "layout.html" %}
 {% block body %}
   {% if session.logged_in %}
-    <form action="{{ url_for('add_patient') }}" method=post class=add-entry>
+    <form action="{{ url_for('add_patient') }}" method=post class=add-patient>
       <dl>
         <dt>Patient ID:
         <dd><input type=text size=30 name=patient_id>
@@ -11,7 +11,7 @@
       </dl>
     </form>
   {% endif %}
-  <ul class=entries>
+  <ul class=patients>
   {% for patient in patients %}
     <li><h2>{{ patient.patient_id }}</h2>{{ patient.sex|safe }}
   {% else %}
