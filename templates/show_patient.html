@@ -12,11 +12,12 @@
     </form>
   {% endif %}
   <ul class=patients>
-  {% for patient in patients %}
-    <li><h2>{{ patient.patient_id }}</h2>{{ patient.sex|safe }}
-   <a href={{ url_for('show_patient', patient_id=patient.patient_id) }}>link</a>
+  {% if patient %}
+    <li><h2>patient: {{ patient['patient_id'] }}</h2></li>
+    <li>id: {{ patient['id'] }}</li>
+    <li>sex: {{ patient['sex'] }}</li>
   {% else %}
-    <li><em>Unbelievable.  No patients here so far</em>
-  {% endfor %}
+    <li><em>No patient found</em></li>
+  {% endif %}
   </ul>
 {% endblock %}

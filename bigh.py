@@ -39,6 +39,19 @@ def init_db():
 # from flaskr import init_db
 # init_db()
 
+# one=True, return just 1st item in query
+def query_db(query, args=(), one=False):
+    '''Query database and return list of dictionaries.'''
+    cur = g.db.execute(query, args)
+    rv = cur.fetchall()
+    return (rv[0] if rv else None) if one else rv
+
+# actually I want to get multiple fields from db for given id
+def get_params(patient_id):
+    rv = query_db('select sex from patients where patient_id = ?',
+        [patient_id], one=True)
+    return rv[0] if rv else None
+
 # decorators, run special functions before db request, 
 # after db request @app.after_request \n def after_request():
 # if db request throws exception (teardown)
@@ -76,6 +89,23 @@ def add_patient():
     g.db.commit()
     flash('New patient was successfully posted')
     return redirect(url_for('show_patients'))
+
+@app.route('/patient/<patient_id>')
+def show_patient(patient_id):
+    print 'show_patient id', patient_id
+#   cur = g.db.execute('select sex from patients where patient_id = ? order by id desc', patient_id)
+#   patient = [dict(pid=row[0], sex=row[1]) for row in cur.fetchall()]
+#   patient = get_params(patient_id)  # works for one param
+    rq = query_db('select sex, id from patients where patient_id = ?',
+        [patient_id], one=True)
+    patient = None
+    if rq:
+        patient = dict(sex=rq[0], id=rq[1], patient_id=patient_id)
+#       patient['patient_id'] = patient_id
+    print 'show_patient', patient
+#   app.logger.warning('debug: show_patient: pid=%s id=%d sex=%s', patient['patient_id'], patient['id'], patient['sex'])  # works, tuple index is int
+#   abort(401)
+    return render_template('show_patient.html', patient=patient)
 
 # user login
 @app.route('/login', methods=['GET', 'POST'])
