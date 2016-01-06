@@ -71,6 +71,7 @@ def teardown_request(exception):
 
 # show all patients in db
 @app.route('/')
+@app.route('/patients/')
 def show_patients():
     cur = g.db.execute('select patient_id, sex from patients order by id desc')
     patients = [dict(patient_id=row[0], sex=row[1]) for row in cur.fetchall()]

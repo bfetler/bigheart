@@ -3,6 +3,8 @@
 <link rel=stylesheet type=text/css href="{{ url_for('static', filename='style.css') }}">
 <div class=page>
   <h1>Big Heart</h1>
+  <h2><em>Left Atrial Enlargement</em></h2>
+  <hr/>
   <div class=metanav>
   {% if not session.logged_in %}
     <a href="{{ url_for('login') }}">log in</a>

@@ -10,13 +10,16 @@
         <dd><input type=submit value=Share>
       </dl>
     </form>
+    <h2 class=title><em>Patient ID:</em></h2>
+    <ul class=patients>
+    {% for patient in patients %}
+      <li><h2>
+        <a href={{ url_for('show_patient', patient_id=patient.patient_id) }}>
+           {{ patient.patient_id }}</a>
+      </h2></li>
+    {% else %}
+      <li><em>No patients listed here so far</em>
+    {% endfor %}
+    </ul>
   {% endif %}
-  <ul class=patients>
-  {% for patient in patients %}
-    <li><h2>{{ patient.patient_id }}</h2>{{ patient.sex|safe }}
-   <a href={{ url_for('show_patient', patient_id=patient.patient_id) }}>link</a>
-  {% else %}
-    <li><em>Unbelievable.  No patients here so far</em>
-  {% endfor %}
-  </ul>
 {% endblock %}
