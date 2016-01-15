@@ -23,6 +23,7 @@ app.config.from_object(__name__)
 
 # when first starting app, don't forget:
 #    sqlite3 /tmp/flaskr.db < schema.sql
+#    substitute in the DATABASE path above
 
 # connect to database
 def connect_db():
@@ -70,7 +71,7 @@ def teardown_request(exception):
 #    views also use template inheritance, e.g. {% block body %}
 
 # show all patients in db
-@app.route('/')
+# @app.route('/')
 @app.route('/patients/')
 def show_patients():
     cur = g.db.execute('select patient_id, sex from patients order by id desc')
@@ -90,6 +91,11 @@ def add_patient():
     g.db.commit()
     flash('New patient was successfully posted')
     return redirect(url_for('show_patients'))
+
+@app.route('/')
+@app.route('/new/')
+def new_patient():
+    return render_template('show_patient.html', patient=None)
 
 @app.route('/patient/<patient_id>')
 def show_patient(patient_id):
@@ -120,7 +126,8 @@ def login():
         else:
             session['logged_in'] = True
             flash('You were logged in')
-            return redirect(url_for('show_patients'))
+#           return redirect(url_for('show_patients'))
+            return redirect(url_for('new_patient'))
     return render_template('login.html', error=error)
 
 # user logout
