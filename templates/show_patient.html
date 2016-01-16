@@ -7,8 +7,11 @@
     {% if patient %}
       <ul class=patients>
         <li><h2>patient: {{ patient['patient_id'] }}</h2></li>
-        <li>id: {{ patient['id'] }}</li>
-        <li>sex: {{ patient['sex'] }}</li>
+        <li>ID: {{ patient['id'] }}</li>
+        <li>Sex: {{ patient['sex'] }}</li>
+        <li>Date &amp; Time: {{ patient['datetime'] }}</li>
+        <li>Xray: {{ patient['xray'] }}</li>
+        <li>CT / MRI: {{ patient['ct_mri'] }}</li>
       </ul>
     {% else %}
       <form action="{{ url_for('add_patient') }}" method=post class=add-patient>
@@ -17,6 +20,8 @@
           <dd><input type=text size=30 name=patient_id />
           <dt>Sex:
           <dd><input type=text size=30 name=sex />
+          <dt>Xray:
+          <dd><input type=text size=30 name=xray />
           <dd><input type=submit value=Share />
         </dl>
       </form>
