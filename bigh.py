@@ -146,29 +146,33 @@ def show_patients():
 def add_patient():
     if not session.get('logged_in'):
         abort(401)
+    patient_id = request.form['patient_id']
     dz = int(time.mktime(datetime.datetime.now().timetuple()))  # since 1970
     g.db.execute('insert into patients (patient_id, sex, date_created, \
                   xray, double_density, oblique_diameter, \
                   appendage_shape, ct_mri) values \
                   (?, ?, ?, ?, ?, ?, ?, ?)',
-                 [request.form['patient_id'], request.form['sex'], dz, 
+                 [patient_id, request.form['sex'], dz, 
                   bool2int(request.form['xray']),
                   choice2int(request.form['double_density']),
                   float(request.form['oblique_diameter']),  # check < 0.0
                   choice2appendage(request.form['appendage_shape']), 0])
     g.db.commit()
-    app.logger.warning('debug: add_patient: app_shape=%s app_code=%d', request.form['appendage_shape'], choice2appendage(request.form['appendage_shape']))
+    app.logger.warning('debug: add_patient: patient_id=%s app_shape=%s app_code=%d', patient_id, request.form['appendage_shape'], choice2appendage(request.form['appendage_shape']))
     flash('New patient was successfully posted')
-    return redirect(url_for('show_patients'))
+#   return redirect(url_for('show_patients'))
+    return redirect(url_for('show_patient', patient_id=patient_id))
 
 @app.route('/')
 @app.route('/new/')
 def new_patient():
     return render_template('show_patient.html', patient=None)
 
+# PostgreSQL libs: psychoPG2   SQL_alchemy  postgres_from_heroku
+
 @app.route('/patient/<patient_id>')
 def show_patient(patient_id):
-    print 'show_patient id', patient_id
+#   print 'show_patient id', patient_id
 #   cur = g.db.execute('select sex from patients where patient_id = ? order by id desc', patient_id)
 #   patient = [dict(pid=row[0], sex=row[1]) for row in cur.fetchall()]
 #   patient = get_params(patient_id)  # works for one param
