@@ -62,12 +62,31 @@ def get_params(patient_id):
         [patient_id], one=True)
     return rv[0] if rv else None
 
-# helper method, should use boolean not string
+# helper methods, use boolean not string?
 def int2bool(intval):
-    return 'False' if intval == 0 else 'True'
+#   return 'False' if intval == 0 else 'True'
+    return 'True' if intval == 1 else 'False'
 
 def bool2int(str):
     return 1 if str == 'True' else 0
+
+def int2choice(intval):
+    if intval == 1:
+        r = 'True'
+    elif intval == 2:
+        r = 'False'
+    else:
+        r = 'Unsure'
+    return r
+
+def choice2int(str):
+    if str == 'True':
+        r = 1
+    elif str == 'False':
+        r = 2
+    else:
+        r = 0
+    return r
 
 # decorators, run special functions before db request, 
 # after db request @app.after_request \n def after_request():
