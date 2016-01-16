@@ -64,7 +64,6 @@ def get_params(patient_id):
 
 # helper methods, use boolean not string?
 def int2bool(intval):
-#   return 'False' if intval == 0 else 'True'
     return 'True' if intval == 1 else 'False'
 
 def bool2int(str):
@@ -88,6 +87,29 @@ def choice2int(str):
         r = 0
     return r
 
+# use dict instead of nested if?
+def angle2choice(intval):
+    if intval == 1:
+        r = 'Concave or Flat'
+    elif intval == 2:
+        r = 'Convex'
+    else:
+        r = 'Unsure'
+    return r
+
+def choice2angle(str):
+    if str == 'Concave or Flat':
+        r = 1
+    elif str == 'Convex':
+        r = 2
+    else:
+        r = 0
+    return r
+
+def getDateStr(dateint):
+    ddate = datetime.datetime.fromtimestamp(dateint)
+    return str(ddate.strptime(str(ddate), "%Y-%m-%d %H:%M:%S"))
+
 # decorators, run special functions before db request, 
 # after db request @app.after_request \n def after_request():
 # if db request throws exception (teardown)
@@ -109,8 +131,8 @@ def teardown_request(exception):
 # @app.route('/')
 @app.route('/patients/')
 def show_patients():
-    cur = g.db.execute('select patient_id, sex from patients order by id desc')
-    patients = [dict(patient_id=row[0], sex=row[1]) for row in cur.fetchall()]
+    cur = g.db.execute('select patient_id, date_created from patients order by id desc')
+    patients = [dict(patient_id=row[0], datetime=getDateStr(row[1])) for row in cur.fetchall()]
     return render_template('show_patients.html', patients=patients)
 
 # let user add new patient if logged in
@@ -123,9 +145,14 @@ def add_patient():
         abort(401)
     dz = int(time.mktime(datetime.datetime.now().timetuple()))  # since 1970
     g.db.execute('insert into patients (patient_id, sex, date_created, \
-                  xray, ct_mri) values (?, ?, ?, ?, ?)',
+                  xray, double_density, oblique_diameter, \
+                  appendage_shape, ct_mri) values \
+                  (?, ?, ?, ?, ?, ?, ?, ?)',
                  [request.form['patient_id'], request.form['sex'], dz, 
-                  bool2int(request.form['xray']), 0])
+                  bool2int(request.form['xray']),
+                  float(request.form['oblique_diameter']),  # check < 0.0
+                  choice2int(request.form['double_density']),
+                  choice2angle(request.form['appendage_shape']), 0])
     g.db.commit()
     flash('New patient was successfully posted')
     return redirect(url_for('show_patients'))
@@ -141,17 +168,23 @@ def show_patient(patient_id):
 #   cur = g.db.execute('select sex from patients where patient_id = ? order by id desc', patient_id)
 #   patient = [dict(pid=row[0], sex=row[1]) for row in cur.fetchall()]
 #   patient = get_params(patient_id)  # works for one param
-    rq = query_db('select sex, id, date_created, xray, ct_mri from patients where patient_id = ?',
+    rq = query_db('select sex, id, date_created, xray, double_density, \
+         oblique_diameter, appendage_shape, ct_mri from patients where \
+         patient_id = ?',
         [patient_id], one=True)
     patient = None
     if rq:
-        dd = datetime.datetime.fromtimestamp(rq[2])
-        dd = str(dd.strptime(str(dd), "%Y-%m-%d %H:%M:%S"))
-        xray   = int2bool(rq[3])
-        ct_mri = int2bool(rq[4])
-        patient = dict(sex=rq[0], id=rq[1], datetime=dd, xray=xray,
-            ct_mri=ct_mri, patient_id=patient_id)
-#       patient['patient_id'] = patient_id
+#       ddate    = datetime.datetime.fromtimestamp(rq[2])
+#       ddate    = str(ddate.strptime(str(ddate), "%Y-%m-%d %H:%M:%S"))
+        ddate    = getDateStr(rq[2])
+        xray     = int2bool(rq[3])
+        ddensity = int2choice(rq[4])
+        oblique_diam = float(rq[5])
+        app_shape = angle2choice(rq[6])
+        ct_mri   = int2bool(rq[7])
+        patient  = dict(sex=rq[0], id=rq[1], datetime=ddate, xray=xray,
+            double_density=ddensity, oblique_diameter=float(oblique_diam),
+            appendage_shape=app_shape, ct_mri=ct_mri, patient_id=patient_id)
     print 'show_patient', patient
 #   app.logger.warning('debug: show_patient: pid=%s id=%d sex=%s', patient['patient_id'], patient['id'], patient['sex'])  # works, tuple index is int
 #   abort(401)
