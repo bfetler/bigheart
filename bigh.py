@@ -88,7 +88,8 @@ def choice2int(str):
     return r
 
 # use dict instead of nested if?
-def angle2choice(intval):
+def appendage2choice(intval):
+    intval = int(intval)
     if intval == 1:
         r = 'Concave or Flat'
     elif intval == 2:
@@ -97,8 +98,10 @@ def angle2choice(intval):
         r = 'Unsure'
     return r
 
-def choice2angle(str):
-    if str == 'Concave or Flat':
+def choice2appendage(str):
+    if str == 'Concave':
+        r = 1
+    elif str == 'Flat':
         r = 1
     elif str == 'Convex':
         r = 2
@@ -150,10 +153,11 @@ def add_patient():
                   (?, ?, ?, ?, ?, ?, ?, ?)',
                  [request.form['patient_id'], request.form['sex'], dz, 
                   bool2int(request.form['xray']),
-                  float(request.form['oblique_diameter']),  # check < 0.0
                   choice2int(request.form['double_density']),
-                  choice2angle(request.form['appendage_shape']), 0])
+                  float(request.form['oblique_diameter']),  # check < 0.0
+                  choice2appendage(request.form['appendage_shape']), 0])
     g.db.commit()
+    app.logger.warning('debug: add_patient: app_shape=%s app_code=%d', request.form['appendage_shape'], choice2appendage(request.form['appendage_shape']))
     flash('New patient was successfully posted')
     return redirect(url_for('show_patients'))
 
@@ -168,7 +172,7 @@ def show_patient(patient_id):
 #   cur = g.db.execute('select sex from patients where patient_id = ? order by id desc', patient_id)
 #   patient = [dict(pid=row[0], sex=row[1]) for row in cur.fetchall()]
 #   patient = get_params(patient_id)  # works for one param
-    rq = query_db('select sex, id, date_created, xray, double_density, \
+    rq = query_db('select sex, date_created, xray, double_density, \
          oblique_diameter, appendage_shape, ct_mri from patients where \
          patient_id = ?',
         [patient_id], one=True)
@@ -176,16 +180,17 @@ def show_patient(patient_id):
     if rq:
 #       ddate    = datetime.datetime.fromtimestamp(rq[2])
 #       ddate    = str(ddate.strptime(str(ddate), "%Y-%m-%d %H:%M:%S"))
-        ddate    = getDateStr(rq[2])
-        xray     = int2bool(rq[3])
-        ddensity = int2choice(rq[4])
-        oblique_diam = float(rq[5])
-        app_shape = angle2choice(rq[6])
-        ct_mri   = int2bool(rq[7])
-        patient  = dict(sex=rq[0], id=rq[1], datetime=ddate, xray=xray,
+        ddate    = getDateStr(rq[1])
+        xray     = int2bool(rq[2])
+        ddensity = int2choice(rq[3])
+        oblique_diam = float(rq[4])
+        app_shape = appendage2choice(rq[5])
+        ct_mri   = int2bool(rq[6])
+        patient  = dict(sex=rq[0], datetime=ddate, xray=xray,
             double_density=ddensity, oblique_diameter=float(oblique_diam),
             appendage_shape=app_shape, ct_mri=ct_mri, patient_id=patient_id)
-    print 'show_patient', patient
+#   print 'show_patient', patient
+    app.logger.warning('debug: show_patient: pid=%s rq5=%s app_shape=%s', patient['patient_id'], rq[5], patient['appendage_shape'])
 #   app.logger.warning('debug: show_patient: pid=%s id=%d sex=%s', patient['patient_id'], patient['id'], patient['sex'])  # works, tuple index is int
 #   abort(401)
     return render_template('show_patient.html', patient=patient)

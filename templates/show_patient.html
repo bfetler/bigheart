@@ -7,14 +7,13 @@
     {% if patient %}
       <ul class=patients>
         <li><h2>patient: {{ patient['patient_id'] }}</h2></li>
-        <li>ID: {{ patient['id'] }}</li>
-        <li>Sex: {{ patient['sex'] }}</li>
-        <li>Date &amp; Time: {{ patient['datetime'] }}</li>
+        <li>Gender: {{ patient['sex'] }}</li>
         <li>Xray: {{ patient['xray'] }}</li>
         <li>Double Density: {{ patient['double_density'] }}</li>
-        <li>Oblique Atrial Diameter: {{ patient['oblique_diameter'] }} cm</li>
+        <li>Oblique Atrial Diameter: {{ patient['oblique_diameter'] }} cm </li>
         <li>Appendage Shape: {{ patient['appendage_shape'] }}</li>
         <li>CT / MRI: {{ patient['ct_mri'] }}</li>
+        <li>Date &amp; Time: {{ patient['datetime'] }}</li>
       </ul>
     {% else %}
       <form action="{{ url_for('add_patient') }}" method=post class=add-patient>
