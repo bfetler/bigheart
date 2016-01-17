@@ -1,22 +1,40 @@
 {% extends "layout.html" %}
 {% block body %}
   {% if session.logged_in %}
-    <div class=patient-list>
-      <a href="/patients/">Patient List</a>
-    </div>
     {% if patient %}
+      <div class=patient-list>
+        <a href="/new/">New Patient</a>
+        <a href="/patients/">Patient List</a>
+      </div>
       <ul class=patients>
         <li><h2>patient: {{ patient['patient_id'] }}</h2></li>
-        <li>id: {{ patient['id'] }}</li>
-        <li>sex: {{ patient['sex'] }}</li>
+        <li>Gender: {{ patient['sex'] }}</li>
+        <li>Xray: {{ patient['xray'] }}</li>
+        <li>Double Density: {{ patient['double_density'] }}</li>
+        <li>Oblique Atrial Diameter: {{ patient['oblique_diameter'] }} cm </li>
+        <li>Appendage Shape: {{ patient['appendage_shape'] }}</li>
+        <li>Xray Outcome: {{ patient['xray_outcome'] }} LAE</li>
+        <li>CT / MRI: {{ patient['ctmri'] }}</li>
+        <li>Date &amp; Time: {{ patient['datetime'] }}</li>
       </ul>
     {% else %}
+      <div class=patient-list>
+        <a href="/patients/">Patient List</a>
+      </div>
       <form action="{{ url_for('add_patient') }}" method=post class=add-patient>
         <dl>
           <dt>Patient ID:
           <dd><input type=text size=30 name=patient_id />
           <dt>Sex:
           <dd><input type=text size=30 name=sex />
+          <dt>Xray:
+          <dd><input type=text size=30 name=xray />
+          <dt>Double Density:
+          <dd><input type=text size=30 name=double_density />
+          <dt>Oblique Atrial Diameter (cm):
+          <dd><input type=text size=30 name=oblique_diameter />
+          <dt>Appendage Shape:
+          <dd><input type=text size=30 name=appendage_shape />
           <dd><input type=submit value=Share />
         </dl>
       </form>

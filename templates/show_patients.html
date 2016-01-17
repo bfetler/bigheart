@@ -4,12 +4,13 @@
     <div class='new-patient'>
       <a href={{ url_for('new_patient') }}>New Patient</a>
     </div>
-    <h2 class=title><em>Patient ID:</em></h2>
+    <h2 class=title><em>Patient ID: </em><span>Date Time</span></h2>
     <ul class=patients>
     {% for patient in patients %}
       <li><h2>
         <a href={{ url_for('show_patient', patient_id=patient.patient_id) }}>
            {{ patient.patient_id }}</a>
+        {{ patient['datetime'] }}
       </h2></li>
     {% else %}
       <li><em>No patients listed here so far</em>
