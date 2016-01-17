@@ -8,7 +8,7 @@
       </div>
       <ul class=patients>
         <li><h2>patient: {{ patient['patient_id'] }}</h2></li>
-        <li>Gender: {{ patient['sex'] }}</li>
+        <li>Gender: {{ patient['gender'] }}</li>
         <li>Xray: {{ patient['xray'] }}</li>
         <li>Double Density: {{ patient['double_density'] }}</li>
         <li>Oblique Atrial Diameter: {{ patient['oblique_diameter'] }} cm </li>
@@ -25,8 +25,8 @@
         <dl>
           <dt>Patient ID:
           <dd><input type=text size=30 name=patient_id />
-          <dt>Sex:
-          <dd><input type=text size=30 name=sex />
+          <dt>Gender:
+          <dd><input type=text size=30 name=gender />
           <dt>Xray:
           <dd><input type=text size=30 name=xray />
           <dt>Double Density:

@@ -1,0 +1,20 @@
+To-do list:
+
+  1. Build basic site in flask.  (done)
+  2. Add initial xray formula.   (done)
+  3. Refactor views to better html elements.
+  4. Add html images.
+  5. Add initial tests.
+  6. Add more fields for xray.
+  7. Add fields for CT / MRI.
+  8. Add more formulas for xray, ctmri.
+  9. Add more tests.
+ 10. Add user model (SQL, ctrlr, views), refactor for use w/ patient model.
+ 11. Add SQL-Alchemy, psychoPG2, download heroku postgres, other PostgreSQL libs.
+ 12. Deploy on heroku / other service (virtualenv?).
+
+Notes:
+  -Items on the list are not in fixed order.  They may be done as needed.
+  -The list is not fixed.  It may grow or change.
+  -The status of items may change.  Some may be done, others continual improvement.
+

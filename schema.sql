@@ -2,7 +2,7 @@ drop table if exists patients;
 create table patients (
   id integer primary key autoincrement,
   patient_id text not null,
-  sex text not null,
+  gender text not null,
   date_created integer not null,
   xray integer not null,
   double_density integer,
