@@ -13,11 +13,12 @@ create table patients (
   post_bronchus integer,
   sup_bronchus integer,
   post_esophagus integer,
-  ct_mri integer not null,
+  xray_outcome text,
+  ctmri integer not null,
   atrial_diameter real,
   area_4chamber real,
   area_2chamber real,
   atrial_length real,
   atrial_volume real,
-  outcome text
+  ctmri_outcome text
 );

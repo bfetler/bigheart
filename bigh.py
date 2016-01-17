@@ -138,6 +138,18 @@ def show_patients():
     patients = [dict(patient_id=row[0], datetime=getDateStr(row[1])) for row in cur.fetchall()]
     return render_template('show_patients.html', patients=patients)
 
+def xray_outcome(gender, ddensity, ob_diam, app_shape):
+#   ignore gender for now
+#   out = 'Unsure'
+    out = 'Normal'
+    if (ddensity == 1):
+        out = 'Moderate to Severe'
+        if (ob_diam > 7.0):
+            out = 'Severe'
+        if (app_shape > 1):
+            out = 'Severe2'
+    return out
+
 # let user add new patient if logged in
 #    responds to POST not GET, actual form is in show_patients.html
 #    logged_in key is present and True
@@ -148,19 +160,26 @@ def add_patient():
         abort(401)
     patient_id = request.form['patient_id']
     dz = int(time.mktime(datetime.datetime.now().timetuple()))  # since 1970
+    sex = request.form['sex']
+    xray = bool2int(request.form['xray'])
+    ddensity = choice2int(request.form['double_density'])
+    ob_diam = float(request.form['oblique_diameter'])  # check < 0.0
+    app_shape = choice2appendage(request.form['appendage_shape'])
+#   redirect if not all params reasonable? restrict on form is not enough?
+#   (param validation)
+    x_outcome = ''
+    if (xray > 0):
+        x_outcome = xray_outcome(sex, ddensity, ob_diam, app_shape)
+    ctmri = 0
     g.db.execute('insert into patients (patient_id, sex, date_created, \
                   xray, double_density, oblique_diameter, \
-                  appendage_shape, ct_mri) values \
-                  (?, ?, ?, ?, ?, ?, ?, ?)',
-                 [patient_id, request.form['sex'], dz, 
-                  bool2int(request.form['xray']),
-                  choice2int(request.form['double_density']),
-                  float(request.form['oblique_diameter']),  # check < 0.0
-                  choice2appendage(request.form['appendage_shape']), 0])
+                  appendage_shape, xray_outcome, ctmri) values \
+                  (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                 [patient_id, sex, dz, xray, ddensity, ob_diam,
+                  app_shape, x_outcome, ctmri])
     g.db.commit()
-    app.logger.warning('debug: add_patient: patient_id=%s app_shape=%s app_code=%d', patient_id, request.form['appendage_shape'], choice2appendage(request.form['appendage_shape']))
+    app.logger.warning('debug: add_patient: patient_id=%s app_shape=%d xray_outcome=%s', patient_id,  app_shape, x_outcome)
     flash('New patient was successfully posted')
-#   return redirect(url_for('show_patients'))
     return redirect(url_for('show_patient', patient_id=patient_id))
 
 @app.route('/')
@@ -168,33 +187,34 @@ def add_patient():
 def new_patient():
     return render_template('show_patient.html', patient=None)
 
-# PostgreSQL libs: psychoPG2   SQL_alchemy  postgres_from_heroku
-
 @app.route('/patient/<patient_id>')
 def show_patient(patient_id):
 #   print 'show_patient id', patient_id
 #   cur = g.db.execute('select sex from patients where patient_id = ? order by id desc', patient_id)
 #   patient = [dict(pid=row[0], sex=row[1]) for row in cur.fetchall()]
 #   patient = get_params(patient_id)  # works for one param
-    rq = query_db('select sex, date_created, xray, double_density, \
-         oblique_diameter, appendage_shape, ct_mri from patients where \
+    rq = query_db('select date_created, sex, xray, double_density, \
+         oblique_diameter, appendage_shape, xray_outcome, ctmri from patients where \
          patient_id = ?',
         [patient_id], one=True)
     patient = None
     if rq:
-#       ddate    = datetime.datetime.fromtimestamp(rq[2])
+#       ddate    = datetime.datetime.fromtimestamp(rq[0])
 #       ddate    = str(ddate.strptime(str(ddate), "%Y-%m-%d %H:%M:%S"))
-        ddate    = getDateStr(rq[1])
+        ddate    = getDateStr(rq[0])
+        sex      = rq[1]
         xray     = int2bool(rq[2])
         ddensity = int2choice(rq[3])
         oblique_diam = float(rq[4])
         app_shape = appendage2choice(rq[5])
-        ct_mri   = int2bool(rq[6])
-        patient  = dict(sex=rq[0], datetime=ddate, xray=xray,
-            double_density=ddensity, oblique_diameter=float(oblique_diam),
-            appendage_shape=app_shape, ct_mri=ct_mri, patient_id=patient_id)
+        xray_outcome = rq[6]
+        ctmri    = int2bool(rq[7])
+        patient  = dict(patient_id=patient_id, datetime=ddate, sex=sex, 
+            xray=xray, double_density=ddensity, oblique_diameter=oblique_diam,
+            appendage_shape=app_shape,
+            xray_outcome=xray_outcome, ctmri=ctmri)
 #   print 'show_patient', patient
-    app.logger.warning('debug: show_patient: pid=%s rq5=%s app_shape=%s', patient['patient_id'], rq[5], patient['appendage_shape'])
+    app.logger.warning('debug: show_patient: pid=%s xray=%s app_shape=%s x_outcome=%s', patient['patient_id'], patient['xray'], patient['appendage_shape'], patient['xray_outcome'])
 #   app.logger.warning('debug: show_patient: pid=%s id=%d sex=%s', patient['patient_id'], patient['id'], patient['sex'])  # works, tuple index is int
 #   abort(401)
     return render_template('show_patient.html', patient=patient)
@@ -211,7 +231,6 @@ def login():
         else:
             session['logged_in'] = True
             flash('You were logged in')
-#           return redirect(url_for('show_patients'))
             return redirect(url_for('new_patient'))
     return render_template('login.html', error=error)
 
@@ -221,7 +240,7 @@ def login():
 def logout():
     session.pop('logged_in', None)
     flash('You were logged out')
-    return redirect(url_for('show_patients'))
+    return redirect('/')
 
 
 # allows you to start this file as a server, as a standalone application

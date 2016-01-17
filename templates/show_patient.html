@@ -1,10 +1,11 @@
 {% extends "layout.html" %}
 {% block body %}
   {% if session.logged_in %}
-    <div class=patient-list>
-      <a href="/patients/">Patient List</a>
-    </div>
     {% if patient %}
+      <div class=patient-list>
+        <a href="/new/">New Patient</a>
+        <a href="/patients/">Patient List</a>
+      </div>
       <ul class=patients>
         <li><h2>patient: {{ patient['patient_id'] }}</h2></li>
         <li>Gender: {{ patient['sex'] }}</li>
@@ -12,10 +13,14 @@
         <li>Double Density: {{ patient['double_density'] }}</li>
         <li>Oblique Atrial Diameter: {{ patient['oblique_diameter'] }} cm </li>
         <li>Appendage Shape: {{ patient['appendage_shape'] }}</li>
-        <li>CT / MRI: {{ patient['ct_mri'] }}</li>
+        <li>Xray Outcome: {{ patient['xray_outcome'] }} LAE</li>
+        <li>CT / MRI: {{ patient['ctmri'] }}</li>
         <li>Date &amp; Time: {{ patient['datetime'] }}</li>
       </ul>
     {% else %}
+      <div class=patient-list>
+        <a href="/patients/">Patient List</a>
+      </div>
       <form action="{{ url_for('add_patient') }}" method=post class=add-patient>
         <dl>
           <dt>Patient ID:
