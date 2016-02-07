@@ -4,7 +4,7 @@ To-do list:
   2. Add initial xray formula.   (done)
   3. Refactor views to better html elements.
   4. Add html images.
-  5. Add initial tests.
+  5. Add initial tests.          (done)
   6. Add more fields for xray.
   7. Add fields for CT / MRI.
   8. Add more formulas for xray, ctmri.
