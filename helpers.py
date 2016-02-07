@@ -19,9 +19,9 @@ def bool2int(str):
     return 1 if str == 'True' else 0
 
 def int2choice(intval):
-    if intval == 1:
+    if intval == 2:
         r = 'True'
-    elif intval == 2:
+    elif intval == 0:
         r = 'False'
     else:
         r = 'Unsure'
@@ -29,33 +29,33 @@ def int2choice(intval):
 
 def choice2int(str):
     if str == 'True':
-        r = 1
-    elif str == 'False':
         r = 2
-    else:
+    elif str == 'False':
         r = 0
+    else:
+        r = 1
     return r
 
 # use dict instead of nested if?
 def appendage2choice(intval):
     intval = int(intval)
-    if intval == 1:
-        r = 'Concave or Flat'
-    elif intval == 2:
+    if intval == 2:
         r = 'Convex'
+    elif intval == 0:
+        r = 'Concave or Flat'
     else:
         r = 'Unsure'
     return r
 
 def choice2appendage(str):
-    if str == 'Concave':
-        r = 1
-    elif str == 'Flat':
-        r = 1
-    elif str == 'Convex':
+    if str == 'Convex':
         r = 2
-    else:
+    elif str == 'Concave':
         r = 0
+    elif str == 'Flat':
+        r = 0
+    else:
+        r = 1
     return r
 
 
