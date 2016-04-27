@@ -1,8 +1,10 @@
-Project Requirements (an attempt):
+Project Requirements:
 
 Left Atrial Enlargement (LAE) is a heart condition associated with
-cardiovascular issues and is a predictor of mortality.
-(Need to get more accurate description from wiki.)
+cardiovascular issues and is a predictor of mortality.  See:
+
+  https://en.wikipedia.org/wiki/Left_atrial_enlargement
+  http://radiopaedia.org/articles/left-atrial-enlargement
 
 It is NOT Hypertrophic Cardiomyopathy (HCM, HOCM), which may cause 
 sudden death with little or no warning among young athletes, though
@@ -11,16 +13,12 @@ palpitations, etc.  HCM is caused by a genetic defect of up to 12
 genes, which account for only 60% of cases.  It is hard to diagnose.
 (Would be nice to get genetic study data, for data science project?)
 
-Is there a simpler heart condition we can predict, using
-weight, sex, is_smoker, etc.?
-
-* Note any of these applications must be marked DEMO, NOT FOR
+* Note any such application should be marked DEMO, NOT FOR
   MEDICAL USE, UNRELIABLE, PLEASE CONSULT YOUR PHYSICIAN, etc.
 
 * It's probably a good idea to have a user login page that must be 
   approved by an admin before allowing access, so there's no way
-  the general public could use it (kind of defeats the purpose
-  of a demo?).
+  the general public could use it.
 
 LAE has a definitive diagnosis, with the following patient
 information relevant.  
@@ -28,7 +26,7 @@ information relevant.
   personal: patient_id(str), (name), sex(f/m), datetime, outcome
     obesity (mild, moderate, severe)?  (weight, height -> obesity?)
 
-  X-RAY (present?):         how to come up with a reasonable formula?
+  X-RAY (if present):         need to find a reasonable formula
     direct signs (direct visualization):
       double density sign (T, F, Unsure) - most important indicator
       oblique atrial diameter > 7 cm (bad) (should include double density)
@@ -42,7 +40,7 @@ information relevant.
       superior displacement of left main bronchus, frontal view: True bad, False good
       posterior displacement of esophagus or nasogastric tube: True bad, False good
 
-  CT / MRI (present?):
+  CT / MRI (if present):
     volume is more accurate than diameter
     left atrial AP diameter: women > 40 mm, men > 41 mm bad
       women: 27-38 mm normal, 39-42 mild, 43-46 moderate, >= 47 severe
@@ -54,6 +52,4 @@ information relevant.
         a2 = (2-chamber view area) mm^2
         l1 = (shortest inferior-superior atrial length) mm
         volume = 8pi/3 * a4 * a2 / l1
-
-
 
