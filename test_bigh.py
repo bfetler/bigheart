@@ -26,34 +26,35 @@ class BighTestCase(unittest.TestCase):
 
     def test_empty_db(self):
         rv = self.app.get('/')
-        assert 'Big Heart' in rv.data
-        assert 'log in' in rv.data
+        self.assertIn(b'Big Heart', rv.data)
+        self.assertIn(b'log in', rv.data)
+#       assert b'log in' in rv.data
 
     def test_login_logout(self):
         rv = self.login('admin', 'a-sharp')
-        assert 'You were logged in' in rv.data
-        assert 'Patient ID' in rv.data
-        assert 'Xray' in rv.data
+        self.assertIn(b'You were logged in', rv.data)
+        self.assertIn(b'Patient ID', rv.data)
+        self.assertIn(b'Xray', rv.data)
         rv = self.logout()
-        assert 'You were logged out' in rv.data
+        self.assertIn(b'You were logged out', rv.data)
         rv = self.login('adminx', 'a-sharp')
-        assert 'Invalid username' in rv.data
+        self.assertIn(b'Invalid username', rv.data)
         rv = self.login('admin', 'defaultx')
-        assert 'Invalid password' in rv.data
+        self.assertIn(b'Invalid password', rv.data)
 
     def test_no_patients(self):
         self.login('admin', 'a-sharp')
         rv = self.app.get('/patients', follow_redirects=True)
-        assert 'Big Heart' in rv.data
-        assert 'No patients' in rv.data
+        self.assertIn(b'Big Heart', rv.data)
+        self.assertIn(b'No patients', rv.data)
 
     def test_new_patient(self):
         self.login('admin', 'a-sharp')
         rv = self.app.get('/new', follow_redirects=True)
-        assert 'Big Heart' in rv.data
-        assert 'Patient List' in rv.data
-        assert 'Patient ID' in rv.data
-        assert 'Xray' in rv.data
+        self.assertIn(b'Big Heart', rv.data)
+        self.assertIn(b'Patient List', rv.data)
+        self.assertIn(b'Patient ID', rv.data)
+        self.assertIn(b'Xray', rv.data)
 
 # could test a variety of input, find different outcomes in html
     def test_add_severe_patient(self):
@@ -62,10 +63,10 @@ class BighTestCase(unittest.TestCase):
             gender='male', xray='True', double_density='True',
             oblique_diameter=5.4, appendage_shape='Convex'
         ), follow_redirects=True)
-        assert 'Big Heart' in rv.data
-        assert 'New patient was successfully posted' in rv.data
-        assert 'Severe' in rv.data
-        assert 'Date &amp; Time' in rv.data
+        self.assertIn(b'Big Heart', rv.data)
+        self.assertIn(b'New patient was successfully posted', rv.data)
+        self.assertIn(b'Severe', rv.data)
+        self.assertIn(b'Date &amp; Time', rv.data)
 
     def grr_show_patient(self):
         self.login('admin', 'a-sharp')
@@ -76,8 +77,8 @@ class BighTestCase(unittest.TestCase):
             oblique_diameter=5.4, appendage_shape='Convex'
         ), follow_redirects=True)
         rv = self.app.get('/patients/abcd12', follow_redirects=True)
-        assert 'Big Heart' in rv.data
-        assert 'Severe' in rv.data
+        self.assertIn(u'Big Heart', rv.data)
+        self.assertIn(u'Severe', rv.data)
 
     def grr_messages(self):    # for flaskr, irrelevant fields in data
         self.login('admin', 'a-sharp')
@@ -85,16 +86,16 @@ class BighTestCase(unittest.TestCase):
             title='<BigHeart>',
             text='<strong>HTML</strong> allowed here'
         ), follow_redirects=True)
-#       assert 'Big Heart' in rv.data
-#       assert 'No patients' not in rv.data
-#       assert '&lt;BigHeart&gt;' in rv.data
-#       assert '<strong>HTML</strong> allowed here' in rv.data
+#       self.assertIn(u'Big Heart', rv.data)
+#       self.assertNotIn(u'No patients', rv.data)
+#       self.assertIn(u'&lt;BigHeart&gt;', rv.data)
+#       self.assertIn(u'<strong>HTML</strong> allowed here', rv.data)
 
     def test_req_context(self):   # works but is it useful?
         app = bigh.Flask('bigh')
         with app.test_request_context('/?name=Peter'):
-            assert bigh.request.path == '/'
-            assert bigh.request.args['name'] == 'Peter'
+            self.assertEqual(bigh.request.path, '/')
+            self.assertEqual(bigh.request.args['name'], 'Peter')
 
 if __name__ == '__main__':
     unittest.main()
