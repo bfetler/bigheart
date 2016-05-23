@@ -7,11 +7,9 @@ Left Atrial Enlargement, or enlargement of the left atrium chamber of the heart,
 
 #### *WARNING: NOT FOR DIAGNOSTIC USE*. 
 
-*Software Notes:* This repo contains source code for a demo website to show software capability in aiding doctors and technicians in diagnosis of medical conditions using software data analysis.  It contains data about *Left Atrial Enlargement* or *LAE*.  
+*Software Notes:* This repo contains source code for a demo website to show software capability in aiding doctors and technicians in diagnosis of medical conditions using software data analysis.  It contains data about *Left Atrial Enlargement* or *LAE*.  The website is written in the [Python Flask framework](http://flask.pocoo.org/), and uses a logistic function with heuristic parameters.  
 
-The website is written in the [Python Flask framework](http://flask.pocoo.org/), and uses a logistic function with heuristic parameters.  
-
-Data Sources: Information for *LAE* data is based on the following web sites.  Please view disclaimers on those web sites for additional information.
+*Data Sources:* Information for *LAE* data is based on the following web sites.  Please view disclaimers on those web sites for additional information.
 + https://en.wikipedia.org/wiki/Left_atrial_enlargement
 + http://radiopaedia.org/articles/left-atrial-enlargement
 
