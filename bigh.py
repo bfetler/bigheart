@@ -112,14 +112,17 @@ def add_patient():
                  [patient_id, gender, dz, xray, ddensity, ob_diam,
                   app_shape, x_outcome, ctmri])
     g.db.commit()
-    app.logger.warning('debug: add_patient: patient_id=%s app_shape=%d xray_outcome=%s', patient_id,  app_shape, x_outcome)
+    app.logger.warning('debug: add_patient: patient_id=%s app_shape=%d xray_outcome=%s gender_menu=%s', patient_id,  app_shape, x_outcome, request.form['gender3'])
     flash('New patient was successfully posted')
     return redirect(url_for('show_patient', patient_id=patient_id))
 
 @app.route('/')
 @app.route('/new/')
 def new_patient():
-    return render_template('show_patient.html', patient=None)
+    return render_template(
+        'show_patient.html', patient=None,
+        gender_menu=[{'gender':'female'}, {'gender':'male'}]
+    )
 
 @app.route('/patient/<patient_id>')
 def show_patient(patient_id):

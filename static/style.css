@@ -15,6 +15,9 @@ li.outcome       { font-weight: bold; }
 .patients li h2 a   { margin-right: 1em; float: left; width: 15em; }
 .patients li label  { margin-right: 1em; float: left; width: 15em; }
 .patients li input  { margin-right: 1em; display: block; width: 15em; }
+.patients li select { margin-right: 1em; display: block; width: 10em;
+                      font-size: 1.2em; }
+input.submit     { font-size: 1.2em; }
 .add-patient     { font-size: 0.9em; border-bottom: 1px solid #ccc; }
 .new-patient     { text-align: right; font-size: 0.8em; padding: 0.3em; }
 .add-patient dl  { font-weight: bold; }
