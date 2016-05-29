@@ -11,6 +11,19 @@ def getNowTimeInt():
     '''get current time as int since 1970'''
     return int(time.mktime(datetime.datetime.now().timetuple()))
 
+def get_menu(label, choices):
+    return [ {label:choice} for choice in choices ]
+
+def get_gender_menu():
+    return get_menu('gender', ['Female','Male'])
+
+# this should be order in html menu, not same order as formula
+def get_ddensity_menu():
+    return get_menu('ddensity', ['True','False','Unsure'])
+
+def get_appendage_menu():
+    return get_menu('appshape', ['Convex','Concave','Flat','Unsure'])
+
 # use boolean not string?
 def int2bool(intval):
     return 'True' if intval == 1 else 'False'
@@ -57,17 +70,5 @@ def choice2appendage(str):
     else:
         r = 1
     return r
-
-def get_menu(label, choice_fn):
-    return [ {label:choice} for choice in choice_fn ]
-
-def gender_choices():
-    return ['female','male']
-
-def get_gender_menu():
-    return get_menu('gender', gender_choices())
-
-def gender_menu_choices():
-    return [{'gender':'female'}, {'gender':'male'}]
 
 

@@ -32,33 +32,40 @@
             <input type=text size=30 name=patient_id />
           </li>
           <li>
-            <label for="gender">Gender:</label>
-            <input type=text size=30 name=gender />
-          </li>
-          <li>
-            <label for="xray">Xray:</label>
-            <input type=text size=30 name=xray />
-          </li>
-          <li>
-            <label for="double_density">Double Density:</label>
-            <input type=text size=30 name=double_density />
-          </li>
-          <li>
-            <label for="oblique_diameter">Oblique Atrial Diameter (cm):</label>
-            <input type=text size=30 name=oblique_diameter />
-          </li>
-          <li>
-            <label for="appendage_shape">Appendage Shape:</label>
-            <input type=text size=30 name=appendage_shape />
-          </li>
-          <li>
             <label>Gender:</label>
-            <select name="gender3">
+            <select name="gender">
               <option disabled selected value>select choice</option>
               {% for o in gender_menu %}
               <option value="{{ o.gender }}">{{ o.gender }}</option>
               {% endfor %}
             </select>
+          </li>
+          <li>
+            <label for="xray">Xray:</label>
+            <input class="rad" type=radio name=xray value="False" checked="checked">False</input>
+            <input class="rad" type=radio name=xray value="True" />True</input>
+          </li>
+          <li>
+            <label>Double Density:</label>
+            <select name="double_density">
+              <option disabled selected value>select choice</option>
+              {% for o in ddensity_menu %}
+              <option value="{{ o.ddensity }}">{{ o.ddensity }}</option>
+              {% endfor %}
+            </select>
+          </li>
+          <li>
+            <label>Appendage Shape:</label>
+            <select name="appendage_shape">
+              <option disabled selected value>select choice</option>
+              {% for o in appendage_shape_menu %}
+              <option value="{{ o.appshape }}">{{ o.appshape }}</option>
+              {% endfor %}
+            </select>
+          </li>
+          <li>
+            <label for="oblique_diameter">Oblique Atrial Diameter (cm):</label>
+            <input type=text size=30 name=oblique_diameter />
           </li>
           <li>
             <input class="submit" type=submit value=Share />

@@ -11,7 +11,7 @@ from contextlib import closing  # for database init
 from formulas import getXrayOutcome
 from helpers import getDateStr, getNowTimeInt, int2bool, bool2int, \
      int2choice, choice2int, appendage2choice, choice2appendage, \
-     get_menu, gender_choices, gender_menu_choices, get_gender_menu
+     get_gender_menu, get_ddensity_menu, get_appendage_menu
 
 # configuration - put in env instead of file?
 DATABASE = '/tmp/bigh2.db'
@@ -89,27 +89,45 @@ def show_patients():
 # let user add new patient if logged in
 #    responds to POST not GET, actual form is in show_patients.html
 #    logged_in key is present and True
-#    use ? in SQL to avoid SQL injection
 @app.route('/add', methods=['POST'])
 def add_patient():
     if not session.get('logged_in'):
         abort(401)
-    patient_id = request.form['patient_id']
-    dz = getNowTimeInt()
-    gender = request.form['gender']
-    xray = bool2int(request.form['xray'])
-    ddensity = choice2int(request.form['double_density'])
-    ob_diam = float(request.form['oblique_diameter'])  # check < 0.0
-    app_shape = choice2appendage(request.form['appendage_shape'])
-#   g = request.form['gender']   # cannot request.form same object twice
-#   g, x = request.form['gender'], request.form['xray']
-#   redirect if not all params reasonable? restrict on form is not enough?
-#   (param validation)
+    try:
+        patient_id = request.form['patient_id']   # should not be empty
+        if len(patient_id) < 5:
+# could flash(msg)
+# check if patient_id already in db, if True redirect
+            raise BadRequestKeyError('patient id invalid, too short')
+        xray = request.form['xray']
+        if not xray:
+# special case: cannot make xray diagnosis, x_outcome is '', should not save
+            xray = "False"
+        app.logger.warning('request.form xray %s', str(xray))
+        xray = bool2int(xray)
+        ddensity = choice2int(request.form['double_density'])
+        ob_diam = float(request.form['oblique_diameter'])  # check < 0.0
+        app_shape = choice2appendage(request.form['appendage_shape'])
+        gender = request.form['gender']
+    except (BadRequestKeyError, Exception) as inst:
+        app.logger.warning('request.form %s', str(type(request.form)))
+        app.logger.warning("inst type %s args %s inst %s", str(type(inst)), inst.args, inst)
+#       raise
+#       raise BadRequestKeyError(*inst.args)
+        flash('Patient info incomplete, please re-enter')
+        return redirect(url_for('new_patient'))
+# what can I do with this?
+#    redirect if form incomplete (not store in db)
+#    re-raise exception
+#    log messages
+
     x_outcome = ''
     if (xray > 0):
         x_outcome = getXrayOutcome(gender, ddensity, ob_diam, app_shape)
+    dz = getNowTimeInt()
     ctmri = 0
 # should be ok with postgres too --dillon
+#   use ? in SQL to avoid SQL injection
     g.db.execute('insert into patients (patient_id, gender, date_created, \
                   xray, double_density, oblique_diameter, \
                   appendage_shape, xray_outcome, ctmri) values \
@@ -118,36 +136,17 @@ def add_patient():
                   app_shape, x_outcome, ctmri])
     g.db.commit()
     app.logger.warning('debug: add_patient: patient_id=%s app_shape=%d xray_outcome=%s', patient_id,  app_shape, x_outcome)
-    gen3 = "gen3"
-    try:
-        gen3 = request.form['gender3']
-        app.logger.warning('gender_menu type %s', type(gen3))
-        if (gen3):
-            app.logger.warning('gender_menu=%s', gen3)
-    except (BadRequestKeyError, Exception) as inst:
-        app.logger.warning('request.form %s', str(type(request.form)))
-        app.logger.warning('request.form gender3 not found')
-        app.logger.warning("inst type %s args %s inst %s", str(type(inst)), inst.args, inst)
-#       raise
-#       raise BadRequestKeyError(*inst.args)
-        flash('Patient info incomplete, please re-enter')
-        return redirect(url_for('new_patient', patient_id=patient_id))
-# would be nice to redirect back to previous page w/ info entered
     flash('New patient was successfully posted')
     return redirect(url_for('show_patient', patient_id=patient_id))
-# what can I do with this?
-#    redirect if form incomplete (not store in db)
-#    re-raise exception
-#    log messages
 
 @app.route('/')
 @app.route('/new/')
 def new_patient():
     return render_template(
         'show_patient.html', patient=None,
-#       gender_menu=gender_menu_choices()
-#       gender_menu=get_menu('gender', gender_choices())
-        gender_menu = get_gender_menu()
+        gender_menu = get_gender_menu(),
+        ddensity_menu = get_ddensity_menu(),
+        appendage_shape_menu = get_appendage_menu()
     )
 
 @app.route('/patient/<patient_id>')

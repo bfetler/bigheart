@@ -16,7 +16,8 @@ li.outcome       { font-weight: bold; }
 .patients li h2 a   { margin-right: 1em; float: left; width: 10em; }
 .patients li span   { margin-right: 1em; display: inline-block; width: 11em; }
 .patients li label  { margin-right: 1em; float: left; width: 15em; }
-.patients li input  { margin-right: 1em; display: block; width: 15em; }
+.patients li input  { margin-right: 1em; display: inline-block; width: 15em; }
+.patients li input.rad  { margin-right: 0.1em; margin-left: 2em; width: 2em; }
 .patients li select { margin-right: 1em; display: block; width: 10em;
                       font-size: 1.2em; }
 input.submit     { font-size: 1.2em; }
