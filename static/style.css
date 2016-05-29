@@ -4,7 +4,9 @@ h1, h2           { font-family: 'Georgia', serif; margin: 0; }
 h1               { border-bottom: 2px solid #eee; }
 h2               { font-size: 1.2em; }
 h2.title         { color: black; border-bottom: 1px solid #ccc; }
-h2.title em      { margin-right: 1em; float: left; width: 15em; }
+h2.title em      { margin-right: 1em; float: left; width: 10em; }
+h2.title span    { margin-right: 1em; float: left; width: 10em; }
+# li span          { margin-right: 1em; float: left; width: 10em; display: block; }
 li.outcome       { font-weight: bold; }
 
 .page            { margin: 2em auto; width: 40em; border: 5px solid #ccc;

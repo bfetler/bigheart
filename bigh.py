@@ -5,11 +5,13 @@ import sqlite3
 
 from flask import Flask, request, session, g, redirect, url_for, \
      abort, render_template, flash
+from werkzeug.exceptions import BadRequestKeyError
 
 from contextlib import closing  # for database init
 from formulas import getXrayOutcome
 from helpers import getDateStr, getNowTimeInt, int2bool, bool2int, \
-     int2choice, choice2int, appendage2choice, choice2appendage 
+     int2choice, choice2int, appendage2choice, choice2appendage, \
+     get_menu, gender_choices, gender_menu_choices, get_gender_menu
 
 # configuration - put in env instead of file?
 DATABASE = '/tmp/bigh2.db'
@@ -80,8 +82,8 @@ def teardown_request(exception):
 # @app.route('/')
 @app.route('/patients/')
 def show_patients():
-    cur = g.db.execute('select patient_id, date_created from patients order by id desc')
-    patients = [dict(patient_id=row[0], datetime=getDateStr(row[1])) for row in cur.fetchall()]
+    cur = g.db.execute('select patient_id, date_created, xray_outcome from patients order by id desc')
+    patients = [dict(patient_id=row[0], datetime=getDateStr(row[1]), xray_outcome=row[2]) for row in cur.fetchall()]
     return render_template('show_patients.html', patients=patients)
 
 # let user add new patient if logged in
@@ -99,12 +101,15 @@ def add_patient():
     ddensity = choice2int(request.form['double_density'])
     ob_diam = float(request.form['oblique_diameter'])  # check < 0.0
     app_shape = choice2appendage(request.form['appendage_shape'])
+#   g = request.form['gender']   # cannot request.form same object twice
+#   g, x = request.form['gender'], request.form['xray']
 #   redirect if not all params reasonable? restrict on form is not enough?
 #   (param validation)
     x_outcome = ''
     if (xray > 0):
         x_outcome = getXrayOutcome(gender, ddensity, ob_diam, app_shape)
     ctmri = 0
+# should be ok with postgres too --dillon
     g.db.execute('insert into patients (patient_id, gender, date_created, \
                   xray, double_density, oblique_diameter, \
                   appendage_shape, xray_outcome, ctmri) values \
@@ -112,16 +117,37 @@ def add_patient():
                  [patient_id, gender, dz, xray, ddensity, ob_diam,
                   app_shape, x_outcome, ctmri])
     g.db.commit()
-    app.logger.warning('debug: add_patient: patient_id=%s app_shape=%d xray_outcome=%s gender_menu=%s', patient_id,  app_shape, x_outcome, request.form['gender3'])
+    app.logger.warning('debug: add_patient: patient_id=%s app_shape=%d xray_outcome=%s', patient_id,  app_shape, x_outcome)
+    gen3 = "gen3"
+    try:
+        gen3 = request.form['gender3']
+        app.logger.warning('gender_menu type %s', type(gen3))
+        if (gen3):
+            app.logger.warning('gender_menu=%s', gen3)
+    except (BadRequestKeyError, Exception) as inst:
+        app.logger.warning('request.form %s', str(type(request.form)))
+        app.logger.warning('request.form gender3 not found')
+        app.logger.warning("inst type %s args %s inst %s", str(type(inst)), inst.args, inst)
+#       raise
+#       raise BadRequestKeyError(*inst.args)
+        flash('Patient info incomplete, please re-enter')
+        return redirect(url_for('new_patient', patient_id=patient_id))
+# would be nice to redirect back to previous page w/ info entered
     flash('New patient was successfully posted')
     return redirect(url_for('show_patient', patient_id=patient_id))
+# what can I do with this?
+#    redirect if form incomplete (not store in db)
+#    re-raise exception
+#    log messages
 
 @app.route('/')
 @app.route('/new/')
 def new_patient():
     return render_template(
         'show_patient.html', patient=None,
-        gender_menu=[{'gender':'female'}, {'gender':'male'}]
+#       gender_menu=gender_menu_choices()
+#       gender_menu=get_menu('gender', gender_choices())
+        gender_menu = get_gender_menu()
     )
 
 @app.route('/patient/<patient_id>')

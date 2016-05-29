@@ -58,4 +58,16 @@ def choice2appendage(str):
         r = 1
     return r
 
+def get_menu(label, choice_fn):
+    return [ {label:choice} for choice in choice_fn ]
+
+def gender_choices():
+    return ['female','male']
+
+def get_gender_menu():
+    return get_menu('gender', gender_choices())
+
+def gender_menu_choices():
+    return [{'gender':'female'}, {'gender':'male'}]
+
 
