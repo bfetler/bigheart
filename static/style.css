@@ -5,8 +5,7 @@ h1               { border-bottom: 2px solid #eee; }
 h2               { font-size: 1.2em; }
 h2.title         { color: black; border-bottom: 1px solid #ccc; }
 h2.title em      { margin-right: 1em; float: left; width: 10em; }
-h2.title span    { margin-right: 1em; float: left; width: 10em; }
-# li span          { margin-right: 1em; float: left; width: 10em; display: block; }
+h2.title span    { margin-right: 1em; float: left; width: 9em; }
 li.outcome       { font-weight: bold; }
 
 .page            { margin: 2em auto; width: 40em; border: 5px solid #ccc;
@@ -14,7 +13,8 @@ li.outcome       { font-weight: bold; }
 .patients        { list-style: none; margin: 0; padding: 0; }
 .patients li     { margin: 0.8em 1.2em; }
 .patients li h2  { margin-left: -1em; }
-.patients li h2 a   { margin-right: 1em; float: left; width: 15em; }
+.patients li h2 a   { margin-right: 1em; float: left; width: 10em; }
+.patients li span   { margin-right: 1em; display: inline-block; width: 11em; }
 .patients li label  { margin-right: 1em; float: left; width: 15em; }
 .patients li input  { margin-right: 1em; display: block; width: 15em; }
 .patients li select { margin-right: 1em; display: block; width: 10em;
