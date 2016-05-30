@@ -94,17 +94,20 @@ def add_patient():
     if not session.get('logged_in'):
         abort(401)
     try:
+        xray = request.form['xray']
+        app.logger.warning('request.form xray %s', str(xray))
+        xray = bool2int(xray)
+        if not xray:
+# special case: cannot make xray diagnosis, x_outcome is '', should not save
+#           xray = "False"
+            flash('No Xray data, cannot make diagnosis')
+            return redirect(url_for('new_patient'))
+
         patient_id = request.form['patient_id']   # should not be empty
         if len(patient_id) < 5:
 # could flash(msg)
 # check if patient_id already in db, if True redirect
             raise BadRequestKeyError('patient id invalid, too short')
-        xray = request.form['xray']
-        if not xray:
-# special case: cannot make xray diagnosis, x_outcome is '', should not save
-            xray = "False"
-        app.logger.warning('request.form xray %s', str(xray))
-        xray = bool2int(xray)
         ddensity = choice2int(request.form['double_density'])
         ob_diam = float(request.form['oblique_diameter'])  # check < 0.0
         app_shape = choice2appendage(request.form['appendage_shape'])
