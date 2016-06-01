@@ -1,69 +1,67 @@
 # big heart - a flask demo project
+# python 2.7
 
-# all the imports
-import sqlite3
+# import sqlite3
+import psycopg2
+# import pdb       # pdb.set_trace()  # sets breakpoint
 
 from flask import Flask, request, session, g, redirect, url_for, \
      abort, render_template, flash
 from werkzeug.exceptions import BadRequestKeyError
 
-from contextlib import closing  # for database init
+from contextlib import closing  # used in init_db()
 from formulas import getXrayOutcome
 from helpers import getDateStr, getNowTimeInt, int2bool, bool2int, \
      int2choice, choice2int, appendage2choice, choice2appendage, \
      get_gender_menu, get_ddensity_menu, get_appendage_menu
 
-# configuration - put in env instead of file?
-DATABASE = '/tmp/bigh2.db'
+DATABASE = '/tmp/bigh2.db'   # sqlite3
 DEBUG = True
 SECRET_KEY = 'development key'
 USERNAME = 'admin'
 PASSWORD = 'a-sharp'
 
-# create our little application :)
 app = Flask(__name__)
 app.config.from_object(__name__)
 
 # read config from ENV variable - skip for now
 # app.config.from_envvar('FLASKR_SETTINGS', silent=True)
 
-# when first starting app, don't forget:
+# when first starting app w/ sqlite3:
 #    sqlite3 /tmp/bigh2.db < schema.sql
 #    substitute in the DATABASE path above
 
-# connect to database
 def connect_db():
-    return sqlite3.connect(app.config['DATABASE'])
+    "connect to database"
+    try:
+#       return sqlite3.connect(app.config['DATABASE'])
+        return psycopg2.connect("dbname=flaskdb user=postgres host=localhost")
+    except:
+        print("cannot connect to db")
+        raise
 
-# init database
 def init_db():
+    "init database for sqlite3"
     with closing(connect_db()) as db:
-        with app.open_resource('schema.sql', mode='r') as f:
+        with app.open_resource('schema_lite.sql', mode='r') as f:
             db.cursor().executescript(f.read())
         db.commit()
 
-# now you can create a db in a python script:
-# from flaskr import init_db
-# init_db()
-
-# one=True, return just 1st item in query
 def query_db(query, args=(), one=False):
-    '''Query database and return list of dictionaries.'''
-    cur = g.db.execute(query, args)
+    "Query database and return list of dictionaries, or just one item."
+    cur = g.db.cursor()
+    cur.execute(query, args)
     rv = cur.fetchall()
     return (rv[0] if rv else None) if one else rv
 
-# not used?
 def get_params(patient_id):
     '''Query database for single patient row.'''
-    rv = query_db('select gender from patients where patient_id = ?',
+    rv = query_db('select date_created from patients where patient_id = %s;',
         [patient_id], one=True)
     return rv[0] if rv else None
 
 
-# decorators, run special functions before db request, 
-# after db request @app.after_request \n def after_request():
-# if db request throws exception (teardown)
+# decorators, run special functions before / after db request, 
 @app.before_request
 def before_request():
     g.db = connect_db()
@@ -75,41 +73,39 @@ def teardown_request(exception):
         db.close()
 
 # start view controller section
-#    view templates in templates/, they use Jinja2 w// autoescaping
+#    view templates in templates/, using Jinja2 w/ autoescaping
 #    views also use template inheritance, e.g. {% block body %}
 
-# show all patients in db
-# @app.route('/')
 @app.route('/patients/')
 def show_patients():
-    cur = g.db.execute('select patient_id, date_created, xray_outcome from patients order by id desc')
-    patients = [dict(patient_id=row[0], datetime=getDateStr(row[1]), xray_outcome=row[2]) for row in cur.fetchall()]
+    "show all patients in db"
+    cur = g.db.cursor()
+    cur.execute('SELECT patient_id, date_created, xray_outcome FROM patients ORDER BY id desc;')
+    if cur:
+        patients = [dict(patient_id=row[0], datetime=getDateStr(row[1]), xray_outcome=row[2]) for row in cur.fetchall()]
+    else:
+        patients = []
     return render_template('show_patients.html', patients=patients)
 
-# let user add new patient if logged in
-#    responds to POST not GET, actual form is in show_patients.html
-#    logged_in key is present and True
+# respond to POST, form is show_patients.html
 @app.route('/add', methods=['POST'])
 def add_patient():
-    if not session.get('logged_in'):
+    "add new patient if logged in"
+    if not session.get('logged_in'):  # logged_in key present and True
         abort(401)
     try:
-        xray = request.form['xray']
-        app.logger.warning('request.form xray %s', str(xray))
-        xray = bool2int(xray)
+        xray = bool2int(request.form['xray'])
         if not xray:
-# special case: cannot make xray diagnosis, x_outcome is '', should not save
-#           xray = "False"
+# special case: cannot make xray diagnosis, should not commit
             flash('No Xray data, cannot make diagnosis')
             return redirect(url_for('new_patient'))
 
         patient_id = request.form['patient_id']   # should not be empty
         if len(patient_id) < 5:
 # could flash(msg)
-# check if patient_id already in db, if True redirect
             raise BadRequestKeyError('patient id invalid, too short')
         ddensity = choice2int(request.form['double_density'])
-        ob_diam = float(request.form['oblique_diameter'])  # check < 0.0
+        ob_diam = float(request.form['oblique_diameter'])
         app_shape = choice2appendage(request.form['appendage_shape'])
         gender = request.form['gender']
     except (BadRequestKeyError, Exception) as inst:
@@ -124,27 +120,32 @@ def add_patient():
 #    re-raise exception
 #    log messages
 
+    has_patient = get_params(patient_id)
+    app.logger.warning('patient_id %s exists %s', patient_id, str(has_patient))
+    if has_patient:
+        flash("patient id '%s' already exists, please re-enter" % patient_id)
+        return redirect(url_for('new_patient'))
+
     x_outcome = ''
     if (xray > 0):
         x_outcome = getXrayOutcome(gender, ddensity, ob_diam, app_shape)
     dz = getNowTimeInt()
     ctmri = 0
-# should be ok with postgres too --dillon
-#   use ? in SQL to avoid SQL injection
-    g.db.execute('insert into patients (patient_id, gender, date_created, \
+    cur = g.db.cursor()
+    cur.execute('insert into patients (patient_id, gender, date_created, \
                   xray, double_density, oblique_diameter, \
                   appendage_shape, xray_outcome, ctmri) values \
-                  (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-                 [patient_id, gender, dz, xray, ddensity, ob_diam,
-                  app_shape, x_outcome, ctmri])
+                  (%s, %s, %s, %s, %s, %s, %s, %s, %s);',
+                 (patient_id, gender, dz, xray, ddensity, ob_diam,
+                  app_shape, x_outcome, ctmri))
     g.db.commit()
-    app.logger.warning('debug: add_patient: patient_id=%s app_shape=%d xray_outcome=%s', patient_id,  app_shape, x_outcome)
     flash('New patient was successfully posted')
     return redirect(url_for('show_patient', patient_id=patient_id))
 
 @app.route('/')
 @app.route('/new/')
 def new_patient():
+    "show new patient form"
     return render_template(
         'show_patient.html', patient=None,
         gender_menu = get_gender_menu(),
@@ -154,13 +155,10 @@ def new_patient():
 
 @app.route('/patient/<patient_id>')
 def show_patient(patient_id):
-#   print 'show_patient id', patient_id
-#   cur = g.db.execute('select gender from patients where patient_id = ? order by id desc', patient_id)
-#   patient = [dict(pid=row[0], gender=row[1]) for row in cur.fetchall()]
-#   patient = get_params(patient_id)  # works for one param
+    "show patient with given patient_id"
     rq = query_db('select date_created, gender, xray, double_density, \
-         oblique_diameter, appendage_shape, xray_outcome, ctmri from patients where \
-         patient_id = ?',
+         oblique_diameter, appendage_shape, xray_outcome, ctmri from patients \
+         where patient_id = %s;',
         [patient_id], one=True)
     patient = None
     if rq:
@@ -176,15 +174,11 @@ def show_patient(patient_id):
             xray=xray, double_density=ddensity, oblique_diameter=oblique_diam,
             appendage_shape=app_shape,
             xray_outcome=xray_outcome, ctmri=ctmri)
-#   print 'show_patient', patient
-    app.logger.warning('debug: show_patient: pid=%s xray=%s app_shape=%s x_outcome=%s', patient['patient_id'], patient['xray'], patient['appendage_shape'], patient['xray_outcome'])
-#   app.logger.warning('debug: show_patient: pid=%s id=%d gender=%s', patient['patient_id'], patient['id'], patient['gender'])  # works, tuple index is int
-#   abort(401)
     return render_template('show_patient.html', patient=patient)
 
-# user login
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    "user login"
     error = None
     if request.method == 'POST':
         if request.form['username'] != app.config['USERNAME']:
@@ -197,16 +191,16 @@ def login():
             return redirect(url_for('new_patient'))
     return render_template('login.html', error=error)
 
-# user logout
 #    pop w/ 2nd param deletes key if present, do nothing if not present
 @app.route('/logout')
 def logout():
+    "user logout"
     session.pop('logged_in', None)
     flash('You were logged out')
     return redirect('/')
 
 
-# allows you to start this file as a server, as a standalone application
+# lets you start this file as a server, standalone application
 if __name__ == '__main__':
     app.run()
 
