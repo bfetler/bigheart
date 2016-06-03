@@ -42,10 +42,15 @@ def connect_db():
 
 def init_db():
     "init database for sqlite3"
-    with closing(connect_db()) as db:
-        with app.open_resource('schema_lite.sql', mode='r') as f:
-            db.cursor().executescript(f.read())
-        db.commit()
+#   with closing(connect_db()) as db:
+#       with app.open_resource('schema_lite.sql', mode='r') as f:
+#           db.cursor().executescript(f.read())
+#       db.commit()
+#   with closing(connect_db()) as db:   # fails
+#       with app.open_resource('schema_pg.sql', mode='r') as f:
+#           db.cursor().execute(f.read())
+#       db.commit()
+    pass
 
 def query_db(query, args=(), one=False):
     "Query database and return list of dictionaries, or just one item."
@@ -60,6 +65,14 @@ def get_params(patient_id):
         [patient_id], one=True)
     return rv[0] if rv else None
 
+def remove_one_patient(patient_id):
+    "remove patient w/ patient_id - used in unittests"
+    tmp_db = connect_db()
+    cur = tmp_db.cursor()
+    sql_str = "delete from patients where patient_id = '%s';" % patient_id
+#   print(type(cur), sql_str)
+    cur.execute(sql_str)
+    tmp_db.commit()
 
 # decorators, run special functions before / after db request, 
 @app.before_request
