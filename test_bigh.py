@@ -10,6 +10,7 @@ class BighTestCase(unittest.TestCase):
         bigh.app.config['TESTING'] = True
         self.app = bigh.app.test_client()
         bigh.init_db()
+# bigh.connect_db() if config['TESTING'] ?
 
     def tearDown(self):
         os.close(self.db_fd)
@@ -46,7 +47,7 @@ class BighTestCase(unittest.TestCase):
 #       self.login('admin', 'a-sharp')
 #       rv = self.app.get('/patients', follow_redirects=True)
 #       self.assertIn(b'Big Heart', rv.data)
-# next line fails if patients, using same db as app for now
+# next line fails if patients, using same table as app for now
 #       self.assertIn(b'No patients', rv.data)
 
     def test_new_patient(self):
