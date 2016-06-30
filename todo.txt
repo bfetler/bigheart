@@ -17,4 +17,5 @@ Notes:
   -Items on the list are not in fixed order.  They may be done as needed.
   -The list is not fixed.  It may grow or change.
   -The status of items may change.  Some may be done, others continual improvement.
+  -For testing, first start PostgreSQL and then run "createdb bigh_test".
 

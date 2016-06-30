@@ -6,15 +6,17 @@ import tempfile
 class BighTestCase(unittest.TestCase):
 
     def setUp(self):
-        self.db_fd, bigh.app.config['DATABASE'] = tempfile.mkstemp()
         bigh.app.config['TESTING'] = True
+        bigh.app.config['DBNAME'] = 'bigh_test'   # must be created first
         self.app = bigh.app.test_client()
-        bigh.init_db()
-# bigh.connect_db() if config['TESTING'] ?
+        with bigh.app.app_context():
+            bigh.init_db()
+        self.db_fd, self.data_path = tempfile.mkstemp()
 
     def tearDown(self):
-        os.close(self.db_fd)
-        os.unlink(bigh.app.config['DATABASE'])
+        os.unlink(self.data_path)
+        with bigh.app.app_context():
+            bigh.init_db()
 
     def login(self, username, password):
         return self.app.post('/login', data=dict(
@@ -29,7 +31,6 @@ class BighTestCase(unittest.TestCase):
         rv = self.app.get('/')
         self.assertIn(b'Big Heart', rv.data)
         self.assertIn(b'log in', rv.data)
-#       assert b'log in' in rv.data
 
     def test_login_logout(self):
         rv = self.login('admin', 'a-sharp')
@@ -43,12 +44,11 @@ class BighTestCase(unittest.TestCase):
         rv = self.login('admin', 'defaultx')
         self.assertIn(b'Invalid password', rv.data)
 
-#   def test_no_patients(self):
-#       self.login('admin', 'a-sharp')
-#       rv = self.app.get('/patients', follow_redirects=True)
-#       self.assertIn(b'Big Heart', rv.data)
-# next line fails if patients, using same table as app for now
-#       self.assertIn(b'No patients', rv.data)
+    def test_no_patients(self):
+        self.login('admin', 'a-sharp')
+        rv = self.app.get('/patients', follow_redirects=True)
+        self.assertIn(b'Big Heart', rv.data)
+        self.assertIn(b'No patients', rv.data)
 
     def test_new_patient(self):
         self.login('admin', 'a-sharp')
@@ -70,38 +70,26 @@ class BighTestCase(unittest.TestCase):
         self.assertIn(b'New patient was successfully posted', rv.data)
         self.assertIn(b'Severe', rv.data)
         self.assertIn(b'Date &amp; Time', rv.data)
-        bigh.remove_one_patient(pat_id)  # clean up db after
 
-    def grr_show_patient(self):
+    def test_add_no_xray_patient(self):
         self.login('admin', 'a-sharp')
-# one way to add it in db?
-# use self.db_fd ?
-        self.app.post('/add', data=dict(patient_id='abcd12',
-            gender='male', xray='True', double_density='True',
+        pat_id = 'abcd34'
+        rv = self.app.post('/add', data=dict(patient_id=pat_id,
+            gender='male', xray='False', double_density='True',
             oblique_diameter=5.4, appendage_shape='Convex'
         ), follow_redirects=True)
-        rv = self.app.get('/patients/abcd12', follow_redirects=True)
-        self.assertIn(u'Big Heart', rv.data)
-        self.assertIn(u'Severe', rv.data)
+        self.assertIn(b'Big Heart', rv.data)
+        self.assertIn(b'No Xray data', rv.data)
 
-    def grr_messages(self):    # for flaskr, irrelevant fields in data
+    def test_no_patient_info(self):
         self.login('admin', 'a-sharp')
         rv = self.app.post('/add', data=dict(
-            title='<BigHeart>',
-            text='<strong>HTML</strong> allowed here'
+            title='BigHeart',
+            text='HTML allowed here'
         ), follow_redirects=True)
-#       self.assertIn(u'Big Heart', rv.data)
-#       self.assertNotIn(u'No patients', rv.data)
-#       self.assertIn(u'&lt;BigHeart&gt;', rv.data)
-#       self.assertIn(u'<strong>HTML</strong> allowed here', rv.data)
-
-    def test_req_context(self):   # works but is it useful?
-        app = bigh.Flask('bigh')
-        with app.test_request_context('/?name=Peter'):
-            self.assertEqual(bigh.request.path, '/')
-            self.assertEqual(bigh.request.args['name'], 'Peter')
+        self.assertIn(u'Big Heart', rv.data)
+        self.assertIn(u'Patient info incomplete', rv.data)
 
 if __name__ == '__main__':
     unittest.main()
-
 

@@ -15,27 +15,32 @@ from helpers import getDateStr, getNowTimeInt, int2bool, bool2int, \
      int2choice, choice2int, appendage2choice, choice2appendage, \
      get_gender_menu, get_ddensity_menu, get_appendage_menu
 
-DATABASE = '/tmp/bigh2.db'   # sqlite3
+# re-initialize sqlite3 as follows:
+#    sqlite3 /tmp/bigh2.db < schema.sql
+
+# DATABASE = '/tmp/bigh2.db'   # sqlite3
 DEBUG = True
 SECRET_KEY = 'development key'
 USERNAME = 'admin'
 PASSWORD = 'a-sharp'
 
+DBNAME = 'flaskdb'
+DBUSER = 'postgres'
+DBHOST = 'localhost'
+
 app = Flask(__name__)
 app.config.from_object(__name__)
 
-# read config from ENV variable - skip for now
 # app.config.from_envvar('FLASKR_SETTINGS', silent=True)
-
-# when first starting app w/ sqlite3:
-#    sqlite3 /tmp/bigh2.db < schema.sql
-#    substitute in the DATABASE path above
 
 def connect_db():
     "connect to database"
     try:
+        dbname = app.config['DBNAME']
+        dbuser = app.config['DBUSER']
+        dbhost = app.config['DBHOST']
+        return psycopg2.connect("dbname=%s user=%s host=%s" % (dbname, dbuser, dbhost))
 #       return sqlite3.connect(app.config['DATABASE'])
-        return psycopg2.connect("dbname=flaskdb user=postgres host=localhost")
     except:
         print("cannot connect to db")
         raise
@@ -46,11 +51,10 @@ def init_db():
 #       with app.open_resource('schema_lite.sql', mode='r') as f:
 #           db.cursor().executescript(f.read())
 #       db.commit()
-#   with closing(connect_db()) as db:   # fails
-#       with app.open_resource('schema_pg.sql', mode='r') as f:
-#           db.cursor().execute(f.read())
-#       db.commit()
-    pass
+    with closing(connect_db()) as db:
+        with app.open_resource('schema_pg.sql', mode='r') as f:
+            db.cursor().execute(f.read())
+        db.commit()
 
 def query_db(query, args=(), one=False):
     "Query database and return list of dictionaries, or just one item."
@@ -66,15 +70,14 @@ def get_params(patient_id):
     return rv[0] if rv else None
 
 def remove_one_patient(patient_id):
-    "remove patient w/ patient_id - used in unittests"
+    "remove patient w/ patient_id"
     tmp_db = connect_db()
     cur = tmp_db.cursor()
     sql_str = "delete from patients where patient_id = '%s';" % patient_id
-#   print(type(cur), sql_str)
     cur.execute(sql_str)
     tmp_db.commit()
 
-# decorators, run special functions before / after db request, 
+# special functions for db access before / after routes
 @app.before_request
 def before_request():
     g.db = connect_db()
@@ -85,9 +88,7 @@ def teardown_request(exception):
     if db is not None:
         db.close()
 
-# start view controller section
-#    view templates in templates/, using Jinja2 w/ autoescaping
-#    views also use template inheritance, e.g. {% block body %}
+# start route controller section
 
 @app.route('/patients/')
 def show_patients():
@@ -100,7 +101,6 @@ def show_patients():
         patients = []
     return render_template('show_patients.html', patients=patients)
 
-# respond to POST, form is show_patients.html
 @app.route('/add', methods=['POST'])
 def add_patient():
     "add new patient if logged in"
@@ -109,7 +109,6 @@ def add_patient():
     try:
         xray = bool2int(request.form['xray'])
         if not xray:
-# special case: cannot make xray diagnosis, should not commit
             flash('No Xray data, cannot make diagnosis')
             return redirect(url_for('new_patient'))
 
@@ -122,19 +121,15 @@ def add_patient():
         app_shape = choice2appendage(request.form['appendage_shape'])
         gender = request.form['gender']
     except (BadRequestKeyError, Exception) as inst:
-        app.logger.warning('request.form %s', str(type(request.form)))
-        app.logger.warning("inst type %s args %s inst %s", str(type(inst)), inst.args, inst)
+#       app.logger.warning('request.form %s', str(type(request.form)))
+#       app.logger.warning("inst type %s args %s inst %s", str(type(inst)), inst.args, inst)
+# we may: redirect if form incomplete (not store in db), re-raise exception, log messages
 #       raise
 #       raise BadRequestKeyError(*inst.args)
         flash('Patient info incomplete, please re-enter')
         return redirect(url_for('new_patient'))
-# what can I do with this?
-#    redirect if form incomplete (not store in db)
-#    re-raise exception
-#    log messages
 
     has_patient = get_params(patient_id)
-    app.logger.warning('patient_id %s exists %s', patient_id, str(has_patient))
     if has_patient:
         flash("patient id '%s' already exists, please re-enter" % patient_id)
         return redirect(url_for('new_patient'))
@@ -204,16 +199,14 @@ def login():
             return redirect(url_for('new_patient'))
     return render_template('login.html', error=error)
 
-#    pop w/ 2nd param deletes key if present, do nothing if not present
 @app.route('/logout')
 def logout():
     "user logout"
     session.pop('logged_in', None)
+#   pop w/ 2nd param deletes key if present, do nothing if not present
     flash('You were logged out')
     return redirect('/')
 
-
-# lets you start this file as a server, standalone application
 if __name__ == '__main__':
     app.run()
 
