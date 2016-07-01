@@ -32,6 +32,12 @@ class BighTestCase(unittest.TestCase):
         self.assertIn(b'Big Heart', rv.data)
         self.assertIn(b'log in', rv.data)
 
+    def test_login(self):
+        rv = self.login('admin', 'a-sharp')
+        self.assertIn(b'You were logged in', rv.data)
+        self.assertIn(b'Patient ID', rv.data)
+        self.assertIn(b'Xray', rv.data)
+
     def test_login_logout(self):
         rv = self.login('admin', 'a-sharp')
         self.assertIn(b'You were logged in', rv.data)
@@ -39,6 +45,8 @@ class BighTestCase(unittest.TestCase):
         self.assertIn(b'Xray', rv.data)
         rv = self.logout()
         self.assertIn(b'You were logged out', rv.data)
+
+    def test_login_invalid(self):
         rv = self.login('adminx', 'a-sharp')
         self.assertIn(b'Invalid username', rv.data)
         rv = self.login('admin', 'defaultx')
@@ -58,7 +66,6 @@ class BighTestCase(unittest.TestCase):
         self.assertIn(b'Patient ID', rv.data)
         self.assertIn(b'Xray', rv.data)
 
-# could test a variety of input, find different outcomes in html
     def test_add_severe_patient(self):
         self.login('admin', 'a-sharp')
         pat_id = 'abcd12'
@@ -71,9 +78,23 @@ class BighTestCase(unittest.TestCase):
         self.assertIn(b'Severe', rv.data)
         self.assertIn(b'Date &amp; Time', rv.data)
 
-    def test_add_no_xray_patient(self):
+    def test_show_patient(self):
+        # setup
         self.login('admin', 'a-sharp')
         pat_id = 'abcd34'
+        self.app.post('/add', data=dict(patient_id=pat_id,
+            gender='male', xray='True', double_density='True',
+            oblique_diameter=5.4, appendage_shape='Convex'
+        ), follow_redirects=False)
+        # show patient
+        rv = self.app.get('/patient/'+pat_id)
+        self.assertIn(b'Big Heart', rv.data)
+        self.assertIn(b'Severe', rv.data)
+        self.assertIn(b'Date &amp; Time', rv.data)
+
+    def test_add_no_xray_patient(self):
+        self.login('admin', 'a-sharp')
+        pat_id = 'abcd56'
         rv = self.app.post('/add', data=dict(patient_id=pat_id,
             gender='male', xray='False', double_density='True',
             oblique_diameter=5.4, appendage_shape='Convex'
